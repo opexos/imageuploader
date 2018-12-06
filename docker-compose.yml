@@ -1,0 +1,12 @@
+version: '3'
+services:
+  imageuploader:
+    build: .
+    ports:
+    - "8080:8080"
+  db:
+    image: "postgres:11.1-alpine"
+    volumes:
+    - ./init_db_schema.sh:/docker-entrypoint-initdb.d/init_db_schema.sh
+    ports:
+    - "5432:5432"

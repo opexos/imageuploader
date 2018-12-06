@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans');
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 20px;
+    background-color: #1d5a6f;
+    color: #eeeeee;
+}
+
+textarea {
+    white-space: pre;
+}
+
+img {
+    padding: 5px;
+}
