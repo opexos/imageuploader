@@ -15,7 +15,7 @@ Technologies used:
 * Java 8
 * Spring Framework
 
-####How to start application:
+#### How to start application:
 
 1. Install [docker](https://docs.docker.com/install/)
 2. Install [docker-compose](https://docs.docker.com/compose/install/)
