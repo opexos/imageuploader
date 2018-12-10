@@ -9,7 +9,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
       id SERIAL PRIMARY KEY,
       original BYTEA,
       preview BYTEA,
-      upload_date TIMESTAMP WITH TIME ZONE
+      upload_date TIMESTAMP
     );
     ALTER TABLE images.image OWNER TO images;
 EOSQL

@@ -17,7 +17,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 /**
  * Image service
@@ -125,11 +124,10 @@ public class ImageService {
      * @param imageId image id
      */
     public Image getOriginalImage(int imageId) {
-        Optional<ImageData> image = imageRepository.findById(imageId);
-        if (image.isPresent()) {
-            return new Image(imageId, image.get().getOriginal());
-        }
-        throw new ResourceNotFoundException("Image is not found. Id: " + imageId);
+        byte[] original = imageRepository.getOriginal(imageId);
+        if (original == null)
+            throw new ResourceNotFoundException("Image is not found. Id: " + imageId);
+        return new Image(imageId, original);
     }
 
     /**
@@ -138,11 +136,10 @@ public class ImageService {
      * @param imageId image id
      */
     public Image getPreviewImage(int imageId) {
-        Optional<ImageData> image = imageRepository.findById(imageId);
-        if (image.isPresent()) {
-            return new Image(imageId, image.get().getPreview());
-        }
-        throw new ResourceNotFoundException("Image is not found. Id: " + imageId);
+        byte[] preview = imageRepository.getPreview(imageId);
+        if (preview == null)
+            throw new ResourceNotFoundException("Image is not found. Id: " + imageId);
+        return new Image(imageId, preview);
     }
 
     /**
