@@ -33,6 +33,7 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-web')
     runtimeOnly('org.postgresql:postgresql')
     compileOnly('org.projectlombok:lombok')
+    annotationProcessor('org.projectlombok:lombok')
     providedRuntime('org.springframework.boot:spring-boot-starter-tomcat')
     implementation('org.imgscalr:imgscalr-lib:4.2')
     testImplementation('org.springframework.boot:spring-boot-starter-test')
