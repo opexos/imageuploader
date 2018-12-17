@@ -14,6 +14,8 @@ Also in this application you will find:
 Technologies used:
 * Java 8
 * Spring Framework
+* Memcached
+* Redis
 
 #### How to start application:
 

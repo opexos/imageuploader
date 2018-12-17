@@ -1,25 +1,12 @@
 package com.opexos.imageuploader.image;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Describes image upload request
  */
 public class ImageUploadRequest {
-    private String[] images;
-    private String[] urls;
-
-    public String[] getImages() {
-        return images;
-    }
-
-    public void setImages(String[] images) {
-        this.images = images;
-    }
-
-    public String[] getUrls() {
-        return urls;
-    }
-
-    public void setUrls(String[] urls) {
-        this.urls = urls;
-    }
+    @Getter @Setter private String[] images;
+    @Getter @Setter private String[] urls;
 }

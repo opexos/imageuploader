@@ -1,20 +1,26 @@
 package com.opexos.imageuploader.image;
 
+import com.google.common.primitives.Longs;
+import com.opexos.imageuploader.MemcachedClient;
 import com.opexos.imageuploader.Utils;
 import com.opexos.imageuploader.exceptions.ImageTooBigException;
 import com.opexos.imageuploader.exceptions.InvalidImageException;
 import com.opexos.imageuploader.exceptions.ResourceNotFoundException;
 import com.opexos.imageuploader.exceptions.UrlException;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.var;
 import org.imgscalr.Scalr;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
 
@@ -24,7 +30,11 @@ import java.time.LocalDateTime;
 @Service
 public class ImageService {
 
-    private ImageRepository imageRepository;
+    private final ImageRepository imageRepository;
+    private final MemcachedClient memcachedClient;
+    private final StringRedisTemplate redisTemplate;
+    private static final String KEY_TOTAL_BYTES_STORED = "TOTAL_BYTES_STORED";
+    private static final String KEY_MEMCACHED_TRIGGERED_COUNT = "MEMCACHED_TRIGGERED_COUNT";
 
     @Value("${image.preview-size}")
     private int previewSize;
@@ -33,8 +43,10 @@ public class ImageService {
     private int imageMaxFileSize;
 
     @Autowired
-    public ImageService(ImageRepository imageRepository) {
+    public ImageService(ImageRepository imageRepository, MemcachedClient memcachedClient, StringRedisTemplate redisTemplate) {
         this.imageRepository = imageRepository;
+        this.memcachedClient = memcachedClient;
+        this.redisTemplate = redisTemplate;
     }
 
     /**
@@ -42,9 +54,7 @@ public class ImageService {
      *
      * @param imageData image as byte array
      */
-    public int save(byte[] imageData) {
-        if (imageData == null)
-            throw new IllegalArgumentException("imageData cannot be null");
+    public long save(@NonNull byte[] imageData) {
         if (imageData.length > imageMaxFileSize)
             throw new ImageTooBigException(
                     String.format("Maximum image size exceeded: %d, actual: %d", imageMaxFileSize, imageData.length));
@@ -76,6 +86,8 @@ public class ImageService {
         //save to DB
         imageRepository.save(imgData);
 
+        redisTemplate.opsForValue().increment(KEY_TOTAL_BYTES_STORED, imgData.getOriginal().length + imgData.getPreview().length);
+
         return imgData.getId();
     }
 
@@ -84,9 +96,7 @@ public class ImageService {
      *
      * @param imageDataBase64 image as Base64 string
      */
-    public int save(String imageDataBase64) {
-        if (imageDataBase64 == null)
-            throw new IllegalArgumentException("imageDataBase64 cannot be null");
+    public long save(@NonNull String imageDataBase64) {
         if (imageDataBase64.isEmpty())
             throw new IllegalArgumentException("imageDataBase64 cannot be empty");
 
@@ -99,9 +109,7 @@ public class ImageService {
      *
      * @param imageUrl url to image
      */
-    public int save(URL imageUrl) {
-        if (imageUrl == null)
-            throw new IllegalArgumentException("imageUrl cannot be null");
+    public long save(@NonNull URL imageUrl) {
 
         if (!"http".equals(imageUrl.getProtocol()) &&
                 !"https".equals(imageUrl.getProtocol())) {
@@ -123,10 +131,17 @@ public class ImageService {
      *
      * @param imageId image id
      */
-    public Image getOriginalImage(int imageId) {
-        byte[] original = imageRepository.getOriginal(imageId);
-        if (original == null)
-            throw new ResourceNotFoundException("Image is not found. Id: " + imageId);
+    public Image getOriginalImage(long imageId) {
+        val key = "originalImage" + imageId;
+        byte[] original = memcachedClient.get(key);
+        if (original == null) {
+            original = imageRepository.getOriginal(imageId);
+            if (original == null)
+                throw new ResourceNotFoundException("Image is not found. Id: " + imageId);
+            memcachedClient.set(key, 3600, original);
+        } else {
+            redisTemplate.opsForValue().increment(KEY_MEMCACHED_TRIGGERED_COUNT, 1);
+        }
         return new Image(imageId, original);
     }
 
@@ -135,10 +150,17 @@ public class ImageService {
      *
      * @param imageId image id
      */
-    public Image getPreviewImage(int imageId) {
-        byte[] preview = imageRepository.getPreview(imageId);
-        if (preview == null)
-            throw new ResourceNotFoundException("Image is not found. Id: " + imageId);
+    public Image getPreviewImage(long imageId) {
+        val key = "previewImage" + imageId;
+        byte[] preview = memcachedClient.get(key);
+        if (preview == null) {
+            preview = imageRepository.getPreview(imageId);
+            if (preview == null)
+                throw new ResourceNotFoundException("Image is not found. Id: " + imageId);
+            memcachedClient.set(key, 3600, preview);
+        } else {
+            redisTemplate.opsForValue().increment(KEY_MEMCACHED_TRIGGERED_COUNT, 1);
+        }
         return new Image(imageId, preview);
     }
 
@@ -148,17 +170,11 @@ public class ImageService {
      *
      * @param image image to convert
      */
-    public byte[] getBytes(BufferedImage image) {
-        if (image == null)
-            throw new IllegalArgumentException("image cannot be null");
-
-        try {
-            try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                ImageIO.write(image, "jpg", baos);
-                return baos.toByteArray();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    @SneakyThrows
+    public byte[] getBytes(@NonNull BufferedImage image) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            ImageIO.write(image, "jpg", baos);
+            return baos.toByteArray();
         }
     }
 
@@ -167,24 +183,31 @@ public class ImageService {
      *
      * @param data array of bytes
      */
-    public BufferedImage getBufferedImage(byte[] data) {
-        if (data == null)
-            throw new IllegalArgumentException("data cannot be null");
-
-        try {
-            try (ByteArrayInputStream is = new ByteArrayInputStream(data)) {
-                try {
-                    BufferedImage img = ImageIO.read(is);
-                    if (img == null) throw new Exception(); //sometimes ImageIO.read returns null
-                    return img;
-                } catch (Exception e) {
-                    throw new InvalidImageException("Invalid image format or data is " +
-                            "corrupted. Content size: " + data.length);
-                }
+    @SneakyThrows
+    public BufferedImage getBufferedImage(@NonNull byte[] data) {
+        try (ByteArrayInputStream is = new ByteArrayInputStream(data)) {
+            try {
+                BufferedImage img = ImageIO.read(is);
+                if (img == null) throw new Exception(); //sometimes ImageIO.read returns null
+                return img;
+            } catch (Exception e) {
+                throw new InvalidImageException("Invalid image format or data is " +
+                        "corrupted. Content size: " + data.length);
             }
-        } catch (IOException e) {
-            //convert to runtime exception
-            throw new RuntimeException(e);
         }
+    }
+
+    public ImageStats getStats() {
+        var totalBytesStored = redisTemplate.opsForValue().get(KEY_TOTAL_BYTES_STORED);
+        if (totalBytesStored == null || totalBytesStored.isEmpty())
+            totalBytesStored = "0";
+
+        var memcachedTriggeredCount = redisTemplate.opsForValue().get(KEY_MEMCACHED_TRIGGERED_COUNT);
+        if (memcachedTriggeredCount == null || memcachedTriggeredCount.isEmpty())
+            memcachedTriggeredCount = "0";
+
+        return new ImageStats(
+                Longs.tryParse(totalBytesStored),
+                Longs.tryParse(memcachedTriggeredCount));
     }
 }

@@ -9,8 +9,6 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.opexos.imageuploader.matchers.StringContainsIgnoreCase.containsStringIgnoreCase;
 import static org.hamcrest.Matchers.equalTo;
@@ -57,16 +55,6 @@ public class UtilsTest {
     public void testGetResourceBytes() {
         byte[] resourceArray = Utils.getResourceBytes("staticfile");
         assertThat(resourceArray, equalTo("Do not modify the contents of this file. It is used in tests.".getBytes()));
-    }
-
-    @Test
-    public void testGetIntArray() {
-        List<Object> list = new ArrayList<>();
-        list.add(1);
-        list.add("2");
-        list.add("3");
-        int[] intArray = Utils.getIntArray(list);
-        assertThat(intArray, equalTo(new int[]{1, 2, 3}));
     }
 
     @Test

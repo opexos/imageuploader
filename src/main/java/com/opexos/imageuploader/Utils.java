@@ -6,14 +6,13 @@ import com.opexos.imageuploader.exceptions.DownloadException;
 import com.opexos.imageuploader.exceptions.InvalidBase64Exception;
 import com.opexos.imageuploader.exceptions.JsonParseException;
 import com.opexos.imageuploader.exceptions.UrlException;
+import lombok.SneakyThrows;
+import org.springframework.lang.NonNull;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Base64;
-import java.util.List;
-import java.util.stream.IntStream;
 
 /**
  * Helper methods
@@ -28,9 +27,7 @@ public class Utils {
      * @param url       address to resource
      * @param sizeLimit specify maximum allowed size
      */
-    public static byte[] getBytes(URL url, int sizeLimit) {
-        if (url == null)
-            throw new IllegalArgumentException("url cannot be null");
+    public static byte[] getBytes(@NonNull URL url, int sizeLimit) {
         if (sizeLimit <= 0)
             throw new IllegalArgumentException("sizeLimit cannot be less or equal zero");
 
@@ -58,46 +55,27 @@ public class Utils {
      *
      * @param inputStream input stream for read
      */
-    public static byte[] getBytes(InputStream inputStream) {
-        try {
-            try (ByteArrayOutputStream data = new ByteArrayOutputStream()) {
-                byte[] buffer = new byte[1024 * 4];
-                int n;
-                while (-1 != (n = inputStream.read(buffer))) {
-                    data.write(buffer, 0, n);
-                }
-                return data.toByteArray();
+    @SneakyThrows
+    public static byte[] getBytes(@NonNull InputStream inputStream) {
+        try (ByteArrayOutputStream data = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024 * 4];
+            int n;
+            while (-1 != (n = inputStream.read(buffer))) {
+                data.write(buffer, 0, n);
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            return data.toByteArray();
         }
     }
 
     /**
      * Read resource and returns array of bytes
      */
-    public static byte[] getResourceBytes(String resourceFileName) {
+    @SneakyThrows
+    public static byte[] getResourceBytes(@NonNull String resourceFileName) {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        try {
-            try (InputStream is = classloader.getResourceAsStream(resourceFileName)) {
-                return Utils.getBytes(is);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        try (InputStream is = classloader.getResourceAsStream(resourceFileName)) {
+            return Utils.getBytes(is);
         }
-    }
-
-    /**
-     * Converts list of objects to array of integers.
-     * Each object in list will be converted to string, then parsed to integer.
-     *
-     * @param list list of objects
-     */
-    public static int[] getIntArray(List list) {
-        if (list == null)
-            throw new IllegalArgumentException("list cannot be null");
-
-        return IntStream.range(0, list.size()).map(i -> Integer.parseInt(list.get(i).toString())).toArray();
     }
 
     /**
@@ -105,11 +83,9 @@ public class Utils {
      *
      * @param base64 string encoded in base64 format
      */
-    public static byte[] decodeBase64(String base64) {
-        if (base64 == null)
-            throw new IllegalArgumentException("base64 cannot be null");
+    public static byte[] decodeBase64(@NonNull String base64) {
         if (base64.isEmpty())
-            throw new IllegalArgumentException("base64 is empty string");
+            throw new IllegalArgumentException("base64 string cannot be empty");
 
         try {
             return Base64.getDecoder().decode(base64.getBytes());
@@ -123,11 +99,9 @@ public class Utils {
      *
      * @param data data to encode
      */
-    public static String encodeToBase64(byte[] data) {
-        if (data == null)
-            throw new IllegalArgumentException("data cannot be null");
+    public static String encodeToBase64(@NonNull byte[] data) {
         if (data.length == 0)
-            throw new IllegalArgumentException("data is empty");
+            throw new IllegalArgumentException("data cannot be empty");
 
         return Base64.getEncoder().encodeToString(data);
     }

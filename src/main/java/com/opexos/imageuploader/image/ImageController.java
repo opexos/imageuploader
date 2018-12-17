@@ -1,6 +1,8 @@
 package com.opexos.imageuploader.image;
 
+import com.google.common.primitives.Longs;
 import com.opexos.imageuploader.Utils;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -8,7 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Image controller
@@ -32,7 +33,7 @@ public class ImageController {
                                            @RequestBody(required = false) String requestBody) throws Exception {
 
         //used for collect ids
-        List<Integer> imageIds = new ArrayList<>();
+        val imageIds = new ArrayList<Long>();
 
         //files received in multipart/form-data
         if (multipartFiles != null) {
@@ -44,7 +45,7 @@ public class ImageController {
         //parse data in body
         if (requestBody != null) {
             //try to convert the request body to an object
-            ImageUploadRequest req = Utils.parseJson(requestBody, ImageUploadRequest.class);
+            val req = Utils.parseJson(requestBody, ImageUploadRequest.class);
 
             //save base64 images
             if (req.getImages() != null) {
@@ -64,8 +65,8 @@ public class ImageController {
         }
 
         //return ids of uploaded images
-        ImageUploadResponse resp = new ImageUploadResponse();
-        resp.setIdList(Utils.getIntArray(imageIds));
+        val resp = new ImageUploadResponse();
+        resp.setIdList(Longs.toArray(imageIds));
 
         return resp;
     }
@@ -74,9 +75,18 @@ public class ImageController {
      * Retrieve an image
      */
     @GetMapping(value = "/image/{id:[\\d]+}", produces = "image/jpeg")
-    public byte[] getImage(@PathVariable int id, @RequestParam(value = "preview", required = false) boolean preview) {
-        Image image = preview ? imageService.getPreviewImage(id) : imageService.getOriginalImage(id);
+    public byte[] getImage(@PathVariable long id, @RequestParam(value = "preview", required = false) boolean preview) {
+        val image = preview ? imageService.getPreviewImage(id) : imageService.getOriginalImage(id);
         return image.getData();
+    }
+
+    /**
+     * Returns some statistics about images
+     */
+    @GetMapping(value = "/image/stats")
+    public ImageStatsResponse getStats() {
+        val stats = imageService.getStats();
+        return new ImageStatsResponse(stats.getTotalBytesStored(), stats.getMemcachedTriggeredCount());
     }
 
 }

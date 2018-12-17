@@ -1,25 +1,12 @@
 package com.opexos.imageuploader;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Base class for all REST responses
  */
 public class BaseResponse {
-    private boolean success = true;
-    private String message;
-
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
+    @Getter @Setter private boolean success = true;
+    @Getter @Setter private String message;
 }

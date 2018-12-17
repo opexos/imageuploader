@@ -39,3 +39,26 @@ uploadImages = function (data, output, img, btn, indicator) {
 
     $.ajax(params);
 };
+
+getStats = function (output, btn, indicator) {
+    let params = {
+        url: "/image/stats",
+        type: "GET",
+        success: function (result) {
+            $(output).html(JSON.stringify(result));
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            $(img).html('ERROR');
+            $(output).html(xhr.responseText);
+        },
+        beforeSend: function() {
+            $(btn).prop('disabled', true);
+            $(indicator).show();
+        },
+        complete: function () {
+            $(btn).prop('disabled', false);
+            $(indicator).hide();
+        }
+    };
+    $.ajax(params);
+};

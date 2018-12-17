@@ -87,11 +87,25 @@
 
 <!-------------------------------------------------------------->
 
+<h1>Statistics:</h1>
+<div id="statistics"></div>
+<button id="btnStatistics"
+        onclick="getStats('#statistics','#btnStatistics','#indStatistics')">Refresh
+</button>
+<div class="spinner" id="indStatistics">
+    <div class="bounce1"></div>
+    <div class="bounce2"></div>
+    <div class="bounce3"></div>
+</div>
+
+<!-------------------------------------------------------------->
+
 <script>
     //initialization
     $("#indForm").hide();
     $("#indUrls").hide();
     $("#indBase64").hide();
+    $("#indStatistics").hide();
 </script>
 
 <!-------------------------------------------------------------->

@@ -6,10 +6,10 @@ import lombok.Setter;
 import org.springframework.lang.NonNull;
 
 /**
- * Image entity. Business layer.
+ * Some statistics about images
  */
 @AllArgsConstructor
-public class Image {
-    @Getter @Setter @NonNull private long id;
-    @Getter @Setter @NonNull private byte[] data;
+public class ImageStats {
+    @Getter @Setter @NonNull private long totalBytesStored;
+    @Getter @Setter @NonNull private long memcachedTriggeredCount;
 }
