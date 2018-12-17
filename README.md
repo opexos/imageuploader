@@ -13,6 +13,7 @@ Also in this application you will find:
 
 Technologies used:
 * Java 8
+* Lombok
 * Spring Framework
 * Memcached
 * Redis
