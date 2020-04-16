@@ -1,20 +1,19 @@
-package com.opexos.imageuploader;
+package com.opexos.imageuploader.config;
 
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import net.rubyeye.xmemcached.XMemcachedClientBuilder;
 import net.rubyeye.xmemcached.command.BinaryCommandFactory;
 import net.rubyeye.xmemcached.utils.AddrUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Provides methods for working with Memcached server
  */
+@Slf4j
 public class MemcachedClient {
 
     private final net.rubyeye.xmemcached.MemcachedClient memcachedClient;
-    private static final Logger log = LoggerFactory.getLogger(MemcachedClient.class);
 
     /**
      * Creates a new instance
@@ -35,27 +34,20 @@ public class MemcachedClient {
     /**
      * Get value by key
      */
+    @SneakyThrows
     public <T> T get(String key) {
-        try {
-            return memcachedClient.get(key);
-        } catch (Exception e) {
-            log.warn("Error occurred when get data from memcached", e);
-            return null;
-        }
+        return memcachedClient.get(key);
     }
 
     /**
      * Store key-value item to memcached
      *
      * @param key        Stored key
-     * @param expiration An expiration time, in seconds. Can be up to 30 days. After 30 days, is treated as a unix timestamp of an exact date.
+     * @param expiration An expiration time, in seconds
      * @param value      Stored data
      */
+    @SneakyThrows
     public void set(String key, int expiration, Object value) {
-        try {
-            memcachedClient.set(key, expiration, value);
-        } catch (Exception e) {
-            log.warn("Error occurred when set data to memcached", e);
-        }
+        memcachedClient.set(key, expiration, value);
     }
 }

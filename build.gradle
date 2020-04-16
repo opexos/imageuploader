@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        springBootVersion = '2.1.1.RELEASE'
+        springBootVersion = '2.2.6.RELEASE'
     }
     repositories {
         mavenCentral()
@@ -37,8 +37,13 @@ dependencies {
     providedRuntime('org.springframework.boot:spring-boot-starter-tomcat')
     implementation('org.imgscalr:imgscalr-lib:4.2')
     testImplementation('org.springframework.boot:spring-boot-starter-test')
-    implementation('com.googlecode.xmemcached:xmemcached:2.4.5')
-    implementation('com.google.guava:guava:27.0.1-jre')
-    implementation('redis.clients:jedis:2.9.1')
+    implementation('com.googlecode.xmemcached:xmemcached:2.4.6')
+    runtimeOnly('org.liquibase:liquibase-core:3.6.3')
+    implementation('io.springfox:springfox-swagger2:2.9.2')
+    implementation('io.springfox:springfox-swagger-ui:2.9.2')
+}
+
+test {
+    systemProperty 'spring.profiles.active', 'dev'
 }
 

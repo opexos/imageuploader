@@ -1,8 +1,7 @@
-package com.opexos.imageuploader;
+package com.opexos.imageuploader.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.Connector;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.embedded.tomcat.TomcatConnectorCustomizer;
 import org.springframework.context.ApplicationListener;
@@ -15,9 +14,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Helper class for gracefully shutdown
  */
+@Slf4j
 public class GracefulShutdown implements TomcatConnectorCustomizer, ApplicationListener<ContextClosedEvent> {
 
-    private static final Logger log = LoggerFactory.getLogger(GracefulShutdown.class);
     private volatile Connector connector;
     @Value("${gracefulshutdown.wait-seconds}")
     private int waitSeconds;
@@ -36,6 +35,7 @@ public class GracefulShutdown implements TomcatConnectorCustomizer, ApplicationL
                 try {
                     ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
                     threadPoolExecutor.shutdown();
+                    log.info("Shutdown has started. Waiting for the completion of requests.");
                     if (!threadPoolExecutor.awaitTermination(waitSeconds, TimeUnit.SECONDS)) {
                         log.warn("Tomcat thread pool did not shutdown gracefully within " + waitSeconds +
                                 " seconds. Proceeding with forceful shutdown.");

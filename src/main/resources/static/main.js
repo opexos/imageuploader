@@ -6,13 +6,13 @@ htmlPreviewImages = function (idList) {
     return html;
 };
 
-uploadImages = function (data, output, img, btn, indicator) {
+uploadImages = function (data, output, img, btn, indicator, result) {
     let params = {
         url: "/image",
         type: "POST",
         data: data,
         success: function (result) {
-            $(img).html(htmlPreviewImages(result.idList));
+            $(img).html(htmlPreviewImages(result.ids));
             $(output).html(JSON.stringify(result));
         },
         error: function (xhr, ajaxOptions, thrownError) {
@@ -26,6 +26,7 @@ uploadImages = function (data, output, img, btn, indicator) {
         complete: function () {
             $(btn).prop('disabled', false);
             $(indicator).hide();
+            $(result).show();
         }
     };
 
@@ -42,7 +43,7 @@ uploadImages = function (data, output, img, btn, indicator) {
 
 getStats = function (output, btn, indicator) {
     let params = {
-        url: "/image/stats",
+        url: "/image/statistic",
         type: "GET",
         success: function (result) {
             $(output).html(JSON.stringify(result));
@@ -51,7 +52,7 @@ getStats = function (output, btn, indicator) {
             $(img).html('ERROR');
             $(output).html(xhr.responseText);
         },
-        beforeSend: function() {
+        beforeSend: function () {
             $(btn).prop('disabled', true);
             $(indicator).show();
         },

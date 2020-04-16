@@ -1,100 +1,87 @@
 package com.opexos.imageuploader;
 
-import com.opexos.imageuploader.exceptions.DownloadException;
-import com.opexos.imageuploader.exceptions.InvalidBase64Exception;
-import com.opexos.imageuploader.exceptions.JsonParseException;
-import com.opexos.imageuploader.exceptions.UrlException;
+import com.opexos.imageuploader.exception.InvalidBase64Exception;
+import com.opexos.imageuploader.exception.InvalidUrlException;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
 
-import static com.opexos.imageuploader.matchers.StringContainsIgnoreCase.containsStringIgnoreCase;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 public class UtilsTest {
 
-    @Test
-    public void testGetBytesUrl() {
-        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        URL url = classloader.getResource("staticfile");
-
-        byte[] bytes = Utils.getBytes(url, Integer.MAX_VALUE);
-
-        assertThat(bytes, equalTo("Do not modify the contents of this file. It is used in tests.".getBytes()));
-    }
 
     @Test
-    public void testGetBytesUrlOversize() {
-        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        URL url = classloader.getResource("staticfile");
-        try {
-            Utils.getBytes(url, 10);
-            fail("Size exceed check failed");
-        } catch (DownloadException e) {
-            assertThat(e.getMessage(), containsStringIgnoreCase("maximum size exceeded"));
-        }
-
-    }
-
-    @Test
-    public void testGetBytesInputStream() throws IOException {
+    public void readStream_ok() throws IOException {
         byte[] data = Helpers.getRandomByteArray(1000);
 
         try (ByteArrayInputStream is = new ByteArrayInputStream(data)) {
-            byte[] data2 = Utils.getBytes(is);
+            byte[] data2 = Utils.readStream(is);
             assertThat(data2, equalTo(data));
         }
 
     }
 
     @Test
-    public void testGetResourceBytes() {
+    public void getResourceBytes_ok() {
         byte[] resourceArray = Utils.getResourceBytes("staticfile");
         assertThat(resourceArray, equalTo("Do not modify the contents of this file. It is used in tests.".getBytes()));
     }
 
     @Test
-    public void testDecodeBase64() {
+    public void decodeBase64_ok() {
         byte[] data = Utils.decodeBase64("dGVzdCBtZXNzYWdl");
         assertThat(data, equalTo("test message".getBytes()));
     }
 
     @Test(expected = InvalidBase64Exception.class)
-    public void testDecodeBase64Exception() {
+    public void decodeBase64_fail() {
         Utils.decodeBase64("dGVzdCBtZXNzYWdl2");
     }
 
     @Test
-    public void testEncodeToBase64() {
+    public void encodeToBase64_ok() {
         String str = Utils.encodeToBase64("test message".getBytes());
         assertThat(str, equalTo("dGVzdCBtZXNzYWdl"));
     }
 
-    @Test
-    public void testParseJson() {
-        BaseResponse data = Utils.parseJson("{\"success\":\"true\", \"message\": \"test message\"}", BaseResponse.class);
-        assertThat(data.isSuccess(), equalTo(true));
-        assertThat(data.getMessage(), equalTo("test message"));
-    }
-
-    @Test(expected = JsonParseException.class)
-    public void testParseJsonException() {
-        Utils.parseJson("{success\":\"true\", \"message\": \"test message\"}", BaseResponse.class);
-    }
 
     @Test
-    public void testParseUrl() {
+    public void parseUrl_ok() {
         URL url = Utils.parseUrl("http://google.com");
         assertThat(url.getProtocol(), equalTo("http"));
         assertThat(url.getHost(), equalTo("google.com"));
     }
 
-    @Test(expected = UrlException.class)
-    public void testParseUrlException() {
+    @Test(expected = InvalidUrlException.class)
+    public void parseUrl_fail() {
         Utils.parseUrl("htz://google.com");
+    }
+
+    @Test
+    public void substringAfterLast_ok() {
+        String result = Utils.substringAfterLast("123:456:7890", ":");
+        assertThat(result, equalTo("7890"));
+    }
+
+    @Test
+    public void substringAfterLast_ok_noDelimiterInString() {
+        String result = Utils.substringAfterLast("1234567890", ":");
+        assertThat(result, equalTo("1234567890"));
+    }
+
+    @Test
+    public void substringBeforeFirst_ok() {
+        String result = Utils.substringBeforeFirst("123:456:7890", ":");
+        assertThat(result, equalTo("123"));
+    }
+
+    @Test
+    public void substringBeforeFirst_ok_noDelimiterInString() {
+        String result = Utils.substringBeforeFirst("1234567890", ":");
+        assertThat(result, equalTo("1234567890"));
     }
 }

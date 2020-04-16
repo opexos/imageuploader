@@ -1,15 +1,36 @@
 package com.opexos.imageuploader.image;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.lang.NonNull;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import java.time.OffsetDateTime;
 
 /**
- * Image entity. Business layer.
+ * Image entity. Data layer.
  */
+@Data
+@Entity
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "image")
 public class Image {
-    @Getter @Setter @NonNull private long id;
-    @Getter @Setter @NonNull private byte[] data;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotNull(message = "Original image must be defined")
+    private byte[] original;
+
+    @NotNull(message = "Preview image must be defined")
+    private byte[] preview;
+
+    @NotNull(message = "Upload date must be defined")
+    private OffsetDateTime uploadDate;
+
 }

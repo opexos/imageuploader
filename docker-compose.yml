@@ -1,20 +1,20 @@
 version: '3'
 services:
-  imageuploader:
+  imageservice:
     build: .
     ports:
-      - "8080:8080"
+      - "60000:60000"
   db:
     image: "postgres:11.1-alpine"
     volumes:
-      - ./init_db_schema.sh:/docker-entrypoint-initdb.d/init_db_schema.sh
+      - ./init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
     ports:
-      - "5432:5432"
+      - "60001:5432"
   memcached:
     image: "memcached:1.5.12-alpine"
     ports:
-      - "11211:11211"
+      - "60002:11211"
   redis:
     image: "redis:5.0.3-alpine"
     ports:
-      - "6379:6379"
+      - "60003:6379"
